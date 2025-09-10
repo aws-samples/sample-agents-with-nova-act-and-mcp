@@ -58,6 +58,9 @@ def execute_nova_act_task(task_args, result_file=None):
     starting_page = task_args.get("starting_page")
     actions_input = task_args.get("actions", [])
     headless = task_args.get("headless", False)
+    
+    # Create log directory if it doesn't exist
+    os.makedirs("./log", exist_ok=True)
 
     # Convert action strings to action objects if needed
     actions = []
@@ -76,6 +79,8 @@ def execute_nova_act_task(task_args, result_file=None):
         with NovaAct(
             starting_page=starting_page,
             headless=headless,
+            record_video=True,
+            logs_directory="./log",
         ) as nova_act:
             # Execute each action in sequence
             for action_params in actions:
@@ -215,14 +220,22 @@ async def browser_session(
             results = []
             final_response = {}
 
-            with NovaAct(
+            # Create log directory if it doesn't exist
+            os.makedirs("./log", exist_ok=True)
+            
+            # Create NovaAct instance without context manager to keep it alive
+            nova_act = NovaAct(
                 starting_page=starting_page,
                 headless=headless,
-            ) as nova_act:
-                # Keep a reference to the nova_act instance
-                with session_lock:
-                    global nova_act_instance
-                    nova_act_instance = nova_act
+                record_video=True,
+                logs_directory="./log",
+            )
+            nova_act.start()
+            
+            # Keep a reference to the nova_act instance
+            with session_lock:
+                global nova_act_instance
+                nova_act_instance = nova_act
 
                 # Execute each action in sequence
                 for i, action_text in enumerate(actions):
@@ -306,10 +319,7 @@ async def browser_session(
                         if i == len(actions) - 1:
                             final_response = error_result
 
-            # Do not close the browser here - leave it open for further interaction
-            # The context manager will have stopped the browser when exiting
-            with session_lock:
-                nova_act_instance = None
+            # Keep the browser session alive for further interaction
 
             # Return a structured response with both complete results and the final response
             return {
@@ -514,8 +524,8 @@ async def execute_parallel_browser_tasks(
                         for result in task_result["results"]:
                             if "result_id" in result:
                                 results_store[result["result_id"]] = result
-
-            all_results.append({"error": "Result file not found"})
+            else:
+                all_results.append({"error": "Result file not found"})
 
         except Exception as e:
             all_results.append({"error": str(e)})
@@ -564,8 +574,8 @@ async def save_results(file_path: str, result_ids: Optional[List[str]] = None) -
 
 
 @mcp.tool()
-async def take_screenshot(save_path: Optional[str] = None) -> str:
-    """Take a screenshot in the browser session"""
+async def take_screenshot(save_path: Optional[str] = None, close_session: bool = True) -> str:
+    """Take a screenshot in the browser session and optionally close it"""
     global nova_act_instance
 
     with session_lock:
@@ -577,6 +587,17 @@ async def take_screenshot(save_path: Optional[str] = None) -> str:
     def capture_screenshot():
         try:
             screenshot_bytes = act.page.screenshot()
+            
+            # Close session if requested
+            if close_session:
+                try:
+                    act.stop()
+                    with session_lock:
+                        global nova_act_instance
+                        nova_act_instance = None
+                except:
+                    pass  # Ignore errors during cleanup
+            
             if save_path:
                 os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
                 with open(save_path, "wb") as f:
@@ -639,7 +660,7 @@ if __name__ == "__main__":
             try:
                 nova_act_instance.stop()
             except:
-                raise ValueError("Error closing browser session")
+                pass  # Ignore errors during cleanup
 
     atexit.register(cleanup)
 
