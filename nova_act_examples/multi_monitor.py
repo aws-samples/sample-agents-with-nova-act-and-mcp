@@ -1,12 +1,34 @@
 import os
 import time
 import uuid
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from nova_act import NovaAct
 
 # make logs directory
 os.makedirs("./logs", exist_ok=True)
+
+
+def parse_response(response, field_type):
+    """Parse Nova Act response, handling both JSON and plain text formats"""
+    if not response:
+        return "N/A"
+    
+    # Try to parse as JSON first
+    try:
+        data = json.loads(response)
+        if field_type == "rating" and "average_rating" in data:
+            return f"{data['average_rating']} stars"
+        elif field_type == "size" and "screen_size" in data:
+            return f"{data['screen_size']} inches"
+        elif field_type == "price" and "price" in data:
+            return data["price"]
+    except (json.JSONDecodeError, TypeError):
+        pass
+    
+    # Return as-is if it's already plain text
+    return response
 
 
 def check_monitor_on_amazon(monitor_model, headless=True):
@@ -34,16 +56,16 @@ def check_monitor_on_amazon(monitor_model, headless=True):
             n.act("click on the first search result")
 
             # Get the price
-            price_result = n.act("What is the current price of this monitor?")
-            results["price"] = price_result.response or "N/A"  # Default to "N/A" if None
+            price_result = n.act("What is the current price of this monitor? Respond with just the price like '$369.99'")
+            results["price"] = parse_response(price_result.response, "price") or "N/A"
 
             # Get the rating
-            rating_result = n.act("What is the average rating of this monitor?")
-            results["rating"] = rating_result.response or "N/A"  # Default to "N/A" if None
+            rating_result = n.act("What is the average rating of this monitor? Respond with just the number and 'stars', like '4.5 stars'")
+            results["rating"] = parse_response(rating_result.response, "rating") or "N/A"
 
             # Get screen size
-            size_result = n.act("What is the screen size of this monitor?")
-            results["size"] = size_result.response or "N/A"  # Default to "N/A" if None
+            size_result = n.act("What is the screen size of this monitor? Respond with just the size and 'inches', like '27 inches'")
+            results["size"] = parse_response(size_result.response, "size") or "N/A"
 
         print(f"[Thread {session_id}] ✅ Completed search for {monitor_model}")
     except Exception as e:
