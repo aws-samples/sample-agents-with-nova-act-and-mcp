@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/aws-samples-sample-agents-with-nova-act-and-mcp-badge.png)](https://mseep.ai/app/aws-samples-sample-agents-with-nova-act-and-mcp)
+
 # Building Agents with Amazon Nova Act and MCP
 
 This repository demonstrates how to build intelligent web automation agents using Amazon Nova Act integrated with MCP (Model Context Protocol). MCP provides a standardized way to connect AI models to different data sources and tools - think of it like a "USB-C port for AI applications."
