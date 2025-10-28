@@ -93,7 +93,7 @@ class NovaActMCPClient:
         system_prompt = "You are an AI assistant capable of using tools to help users. Use the provided tools when necessary."
 
         # Generate conversation with Bedrock
-        model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        model_id = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
         try:
             # Make the API call to Bedrock
             response = bedrock_runtime.converse(

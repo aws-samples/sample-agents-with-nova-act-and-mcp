@@ -17,7 +17,6 @@ An MCP (Model Context Protocol) server implementation for Amazon Nova Act, allow
 3. A valid Nova Act API key (obtain from https://nova.amazon.com/act)
 4. Amazon Bedrock access:
    - [Amazon Bedrock enabled in your AWS account](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started.html)
-   - Claude 3.5 Sonnet V2 model enabled (this is the default for this example)
    - AWS credentials and region properly configured
 
 ## Installation

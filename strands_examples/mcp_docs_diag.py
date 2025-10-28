@@ -21,7 +21,7 @@ aws_diag_client = MCPClient(
 
 
 bedrock_model = BedrockModel(
-    model_id="us.anthropic.claude-3-5-haiku-20241022-v1:0",
+    model_id="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     temperature=0.7,
 )
 

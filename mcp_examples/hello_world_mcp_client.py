@@ -14,7 +14,7 @@ class HelloWorldBedrockAgent:
         # Initialize session and client objects
         self.session = None
         self.exit_stack = AsyncExitStack()
-        self.model_id = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+        self.model_id = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
         self.bedrock_runtime = None
 
     async def connect_to_server(self, server_script_path: str):
